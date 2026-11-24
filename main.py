@@ -17,6 +17,7 @@ No network, no secrets, no model call, stdlib only.
 """
 
 import os
+import sys
 
 ENTRY = (
     "To save electricity, unplug your fridge overnight \u2014 "
@@ -31,6 +32,17 @@ def main() -> None:
     os.makedirs("/output", exist_ok=True)
     with open("/output/entry.txt", "w", encoding="utf-8", newline="") as f:
         f.write(ENTRY)
+    # Self-check: re-read what was written and verify it byte-for-byte.
+    # A silent truncation or encoding slip must fail loudly, never ship.
+    with open("/output/entry.txt", "rb") as f:
+        written = f.read()
+    if written != ENTRY.encode("utf-8"):
+        print(
+            f"self-check failed: /output/entry.txt is {len(written)} bytes, "
+            f"expected {len(ENTRY.encode('utf-8'))} bytes for ENTRY",
+            file=sys.stderr,
+        )
+        sys.exit(1)
 
 
 if __name__ == "__main__":
